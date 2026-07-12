@@ -1,0 +1,8 @@
+streamlit
+pandas
+joblib
+shap
+google-generativeai
+numpy
+scikit-learn
+tensorflow
