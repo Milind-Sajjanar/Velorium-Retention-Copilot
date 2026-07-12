@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import shap
-import google.generativeai as genai
+from google import genai
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -205,7 +205,7 @@ if df is None or models is None:
 # 4. SIDEBAR SETUP
 # ==========================================
 if os.path.exists("client_logo.png"):
-    st.sidebar.image("client_logo.png", use_container_width=True)
+    st.sidebar.image("client_logo.png", width='stretch')
 else:
     st.sidebar.markdown("### Velorium Technologies")
 
@@ -234,22 +234,32 @@ api_key = st.sidebar.text_input("Gemini API Key", type="password", value=default
 if default_key:
     st.sidebar.caption("✅ Using key from app secrets.")
 
-llm_model = None
-if api_key:
-    genai.configure(api_key=api_key)
+GEMINI_MODEL_PRIMARY = "gemini-2.5-flash"
+GEMINI_MODEL_FALLBACK = "gemini-2.0-flash"
+
+
+def call_gemini(client, prompt):
+    """Generate content with the new google-genai Client, with a model fallback."""
     try:
-        llm_model = genai.GenerativeModel('gemini-2.5-flash')
+        resp = client.models.generate_content(model=GEMINI_MODEL_PRIMARY, contents=prompt)
+        return resp.text
     except Exception:
-        try:
-            llm_model = genai.GenerativeModel('gemini-pro')
-        except Exception as e:
-            st.sidebar.error(f"Could not initialize Gemini model: {e}")
+        resp = client.models.generate_content(model=GEMINI_MODEL_FALLBACK, contents=prompt)
+        return resp.text
+
+
+gemini_client = None
+if api_key:
+    try:
+        gemini_client = genai.Client(api_key=api_key)
+    except Exception as e:
+        st.sidebar.error(f"Could not initialize Gemini client: {e}")
 
 st.sidebar.markdown("---")
 if os.path.exists("consultancy_logo.png"):
     c1, c2, c3 = st.sidebar.columns([1, 2, 1])
     with c2:
-        st.image("consultancy_logo.png", use_container_width=True)
+        st.image("consultancy_logo.png", width='stretch')
 else:
     st.sidebar.markdown(
         "<div style='text-align: center; font-size: 12px;'>Powered by <b>AnalytIQ</b></div>", unsafe_allow_html=True)
@@ -279,7 +289,7 @@ if page == "📊 Exec Dashboard":
 elif page == "👥 Employee Directory":
     st.markdown("## Employee Directory")
     safe_df = df.drop(columns=['Attrition'], errors='ignore').head(50)
-    st.dataframe(safe_df, use_container_width=True)
+    st.dataframe(safe_df, width='stretch')
 
 elif page == "🤖 Retention Copilot":
     st.markdown(f'<span class="model-badge">MODEL: {model_choice.upper()}</span>', unsafe_allow_html=True)
@@ -375,7 +385,7 @@ elif page == "🤖 Retention Copilot":
             st.session_state.chat_history = []
             st.session_state.full_strategy = ""
 
-            if not api_key or llm_model is None:
+            if not api_key or gemini_client is None:
                 st.error("⚠️ Please enter a valid Gemini API Key in the sidebar.")
             else:
                 with st.spinner(f"Crunching numbers with {model_choice}..."):
@@ -440,8 +450,7 @@ elif page == "🤖 Retention Copilot":
                     """
 
                     try:
-                        resp = llm_model.generate_content(strategy_prompt)
-                        strategy_text = resp.text
+                        strategy_text = call_gemini(gemini_client, strategy_prompt)
                     except Exception as e:
                         strategy_text = f"⚠️ AI Error: Could not generate strategy ({e})."
 
@@ -502,7 +511,7 @@ elif page == "🤖 Retention Copilot":
             top_5_view['Effect'] = top_5_view['Impact'].apply(fmt_arrow)
             top_5_view['SHAP Value'] = top_5_view['Impact'].round(4)
             st.dataframe(top_5_view[['Feature', 'Effect', 'SHAP Value']],
-                         hide_index=True, use_container_width=True)
+                         hide_index=True, width='stretch')
 
         # STRATEGY
         if st.session_state.full_strategy:
@@ -528,7 +537,7 @@ elif page == "🤖 Retention Copilot":
             gen_draft = st.button("Generate Draft")
 
         if gen_draft and action_type != "Choose an action...":
-            if not api_key or llm_model is None:
+            if not api_key or gemini_client is None:
                 st.error("⚠️ Please enter a valid Gemini API Key in the sidebar.")
             else:
                 with st.spinner("Drafting..."):
@@ -539,9 +548,9 @@ elif page == "🤖 Retention Copilot":
                     Tone: Professional.
                     """
                     try:
-                        draft_resp = llm_model.generate_content(draft_prompt)
+                        draft_text = call_gemini(gemini_client, draft_prompt)
                         st.success(f"Draft Generated: {action_type}")
-                        st.markdown(draft_resp.text)
+                        st.markdown(draft_text)
                     except Exception as e:
                         st.error(f"AI Error: {e}")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -555,7 +564,7 @@ elif page == "🤖 Retention Copilot":
                 st.markdown(msg["content"])
 
         if prompt := st.chat_input("Ask about salary, workload..."):
-            if not api_key or llm_model is None:
+            if not api_key or gemini_client is None:
                 st.error("⚠️ Please enter a valid Gemini API Key in the sidebar.")
             else:
                 st.session_state.chat_history.append(
@@ -571,9 +580,9 @@ elif page == "🤖 Retention Copilot":
                         Answer concisely.
                         """
                         try:
-                            chat_resp = llm_model.generate_content(chat_prompt)
-                            st.markdown(chat_resp.text)
+                            chat_text = call_gemini(gemini_client, chat_prompt)
+                            st.markdown(chat_text)
                             st.session_state.chat_history.append(
-                                {"role": "assistant", "content": chat_resp.text})
+                                {"role": "assistant", "content": chat_text})
                         except Exception as e:
                             st.error(f"AI Error: {e}")
