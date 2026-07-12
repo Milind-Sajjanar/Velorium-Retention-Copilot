@@ -1,8 +1,12 @@
 streamlit
 pandas
+numpy
+scikit-learn
+imbalanced-learn
 joblib
 shap
 google-generativeai
-numpy
-scikit-learn
 tensorflow
+xgboost
+lightgbm
+catboost
