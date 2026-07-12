@@ -248,4 +248,4 @@ elif page == "🤖 Retention Copilot":
                 gender = st.selectbox("Gender", ["Male", "Female"])
                 income = st.number_input("Monthly Income", 2000, 20000, 5000)
             with col2:
-                ot = st.selectbox("Overtime", ["Yes", "No
+                ot = st.selectbox("Overtime", ["Yes", "No"])
