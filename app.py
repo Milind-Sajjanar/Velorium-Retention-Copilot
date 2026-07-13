@@ -224,11 +224,14 @@ st.sidebar.caption(f"Currently scoring with **{model_choice}**.")
 st.sidebar.divider()
 st.sidebar.markdown("### ⚙️ System Settings")
 
-# Prefer a key from st.secrets (for deployment) but still allow manual entry.
-try:
-    default_key = st.secrets.get("GEMINI_API_KEY", "")
-except Exception:
-    default_key = ""
+# Prefer a key from environment variables (Cloud Run, Docker, etc.), then
+# st.secrets (Streamlit Cloud), then fall back to manual entry.
+default_key = os.environ.get("GEMINI_API_KEY", "")
+if not default_key:
+    try:
+        default_key = st.secrets.get("GEMINI_API_KEY", "")
+    except Exception:
+        default_key = ""
 
 api_key = st.sidebar.text_input("Gemini API Key", type="password", value=default_key)
 if default_key:
