@@ -1,6 +1,5 @@
-FROM python:3.12-slim
+FROM python:3.12.8-slim
 
-# System deps some ML libraries (xgboost, tensorflow) need at runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgomp1 \
@@ -8,20 +7,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python deps first so Docker can cache this layer between builds
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the app (app.py, data, model .pkl files, logos, etc.)
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# Cloud Run injects the PORT env var (defaults to 8080) — Streamlit must bind to it
 ENV PORT=8080
+ENV TF_CPP_MIN_LOG_LEVEL=2
+
 EXPOSE 8080
 
-CMD streamlit run app.py \
-    --server.port=$PORT \
-    --server.address=0.0.0.0 \
-    --server.headless=true \
-    --server.enableCORS=false \
-    --server.enableXsrfProtection=false
+CMD ["streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0", "--server.headless=true", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]
