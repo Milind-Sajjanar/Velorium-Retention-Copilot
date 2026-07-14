@@ -514,7 +514,7 @@ elif page == "🤖 Retention Copilot":
             top_5_view['Effect'] = top_5_view['Impact'].apply(fmt_arrow)
             top_5_view['SHAP Value'] = top_5_view['Impact'].round(4)
             st.dataframe(top_5_view[['Feature', 'Effect', 'SHAP Value']],
-                         hide_index=True, width='stretch')
+                         hide_index=True, use_container_width=True)
 
         # STRATEGY
         if st.session_state.full_strategy:
