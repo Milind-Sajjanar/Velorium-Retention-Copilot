@@ -205,7 +205,7 @@ if df is None or models is None:
 # 4. SIDEBAR SETUP
 # ==========================================
 if os.path.exists("client_logo.png"):
-    st.sidebar.image("client_logo.png", width='stretch')
+    st.sidebar.image("client_logo.png", use_container_width=True)
 else:
     st.sidebar.markdown("### Velorium Technologies")
 
@@ -262,7 +262,7 @@ st.sidebar.markdown("---")
 if os.path.exists("consultancy_logo.png"):
     c1, c2, c3 = st.sidebar.columns([1, 2, 1])
     with c2:
-        st.image("consultancy_logo.png", width='stretch')
+        st.image("consultancy_logo.png", use_container_width=True)
 else:
     st.sidebar.markdown(
         "<div style='text-align: center; font-size: 12px;'>Powered by <b>AnalytIQ</b></div>", unsafe_allow_html=True)
@@ -292,7 +292,7 @@ if page == "📊 Exec Dashboard":
 elif page == "👥 Employee Directory":
     st.markdown("## Employee Directory")
     safe_df = df.drop(columns=['Attrition'], errors='ignore').head(50)
-    st.dataframe(safe_df, width='stretch')
+    st.dataframe(safe_df, use_container_width=True)
 
 elif page == "🤖 Retention Copilot":
     st.markdown(f'<span class="model-badge">MODEL: {model_choice.upper()}</span>', unsafe_allow_html=True)
