@@ -90,13 +90,42 @@ st.markdown("""
     /* 1. BACKGROUNDS */
     .stApp { background-color: #f4f8fb; }
 
-    /* 2. TEXT COLORS - FORCE BLACK */
-    h1, h2, h3, h4, h5, p, div, span, label { color: #000000 !important; }
+    /* 2. TEXT COLORS */
+    h1, h2, h3, h4, h5 {
+        color: #000000 !important;
+    }
+
+    p, label {
+        color: #000000 !important;
+    }
 
     /* 3. SIDEBAR */
     [data-testid="stSidebar"] {
         background-color: #e3f2fd !important;
         border-right: 1px solid #bbdefb;
+    }
+    /* SELECT BOX FIX */
+    div[data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border-radius: 8px;
+        border: 1px solid #b0bec5;
+    }
+    
+    div[data-baseweb="select"] span {
+        color: #000000 !important;
+    }
+
+    div[role="listbox"] {
+        background-color: #ffffff !important;
+    }
+    
+    div[role="option"] {
+        color: #000000 !important;
+    }
+    
+    div[role="option"]:hover {
+        background-color: #e3f2fd !important;
     }
 
     /* 4. CARDS */
@@ -104,7 +133,7 @@ st.markdown("""
         background-color: #ffffff;
         padding: 20px;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         border: 1px solid #d1d9e6;
         margin-bottom: 20px;
         transition: box-shadow 0.15s ease-in-out;
@@ -117,7 +146,7 @@ st.markdown("""
     .risk-alert {
         background-color: #e3f2fd;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 14px;
         border: 3px solid #000000;
         text-align: center;
     }
@@ -130,8 +159,8 @@ st.markdown("""
     /* 6. BUTTONS */
     .stButton>button {
         width: 100%;
-        background-color: #ffffff !important;
-        color: #000000 !important;
+        background-color: #1976d2 !important;
+        color: white !important;
         border-radius: 8px;
         font-weight: 700;
         font-size: 18px;
@@ -140,7 +169,8 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .stButton>button:hover {
-        background-color: #f0f0f0 !important;
+        background-color: #1565c0 !important;
+        color: white !important;
         border-color: #333333;
     }
 
