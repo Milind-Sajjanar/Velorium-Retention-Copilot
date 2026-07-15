@@ -256,14 +256,14 @@ st.sidebar.markdown("### ⚙️ System Settings")
 
 # Prefer a key from environment variables (Cloud Run, Docker, etc.), then
 # st.secrets (Streamlit Cloud), then fall back to manual entry.
-default_key = os.environ.get("GEMINI_API_KEY", "")
+default_key = os.environ.get("GROQ_API_KEY", "")
 if not default_key:
     try:
-        default_key = st.secrets.get("GEMINI_API_KEY", "")
+        default_key = st.secrets.get("GROQ_API_KEY", "")
     except Exception:
         default_key = ""
 
-api_key = st.sidebar.text_input("API Key", type="password", value=default_key)
+api_key = st.sidebar.text_input("Groq API Key", type="password", value=default_key)
 if default_key:
     st.sidebar.caption("✅ Using key from app secrets.")
 
@@ -272,6 +272,7 @@ GROQ_MODEL_FALLBACK = "llama-3.1-8b-instant"
 
 
 def call_gemini(api_key: str, prompt: str) -> str:
+    """Calls the Groq API (name kept for minimal downstream changes)."""
     client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
     try:
         resp = client.chat.completions.create(
@@ -287,12 +288,10 @@ def call_gemini(api_key: str, prompt: str) -> str:
         return resp.choices[0].message.content
 
 
-gemini_client = None
-if api_key:
-    try:
-        gemini_client = genai.Client(api_key=api_key)
-    except Exception as e:
-        st.sidebar.error(f"Could not initialize Gemini client: {e}")
+# No separate client object needed up front — call_gemini() builds its own
+# Groq client from the api_key each time it's called. We just track
+# whether a key has been provided.
+groq_ready = bool(api_key)
 
 st.sidebar.markdown("---")
 if os.path.exists("consultancy_logo.png"):
@@ -424,8 +423,8 @@ elif page == "🤖 Retention Copilot":
             st.session_state.chat_history = []
             st.session_state.full_strategy = ""
 
-            if not api_key or gemini_client is None:
-                st.error("⚠️ Please enter a valid Gemini API Key in the sidebar.")
+            if not groq_ready:
+                st.error("⚠️ Please enter a valid Groq API Key in the sidebar.")
             else:
                 with st.spinner(f"Crunching numbers with {model_choice}..."):
                     X_in = target_row.drop(
@@ -489,7 +488,7 @@ elif page == "🤖 Retention Copilot":
                     """
 
                     try:
-                        strategy_text = call_gemini(gemini_client, strategy_prompt)
+                        strategy_text = call_gemini(api_key, strategy_prompt)
                     except Exception as e:
                         strategy_text = f"⚠️ AI Error: Could not generate strategy ({e})."
 
@@ -576,8 +575,8 @@ elif page == "🤖 Retention Copilot":
             gen_draft = st.button("Generate Draft")
 
         if gen_draft and action_type != "Choose an action...":
-            if not api_key or gemini_client is None:
-                st.error("⚠️ Please enter a valid Gemini API Key in the sidebar.")
+            if not groq_ready:
+                st.error("⚠️ Please enter a valid Groq API Key in the sidebar.")
             else:
                 with st.spinner("Drafting..."):
                     draft_prompt = f"""
@@ -587,7 +586,7 @@ elif page == "🤖 Retention Copilot":
                     Tone: Professional.
                     """
                     try:
-                        draft_text = call_gemini(gemini_client, draft_prompt)
+                        draft_text = call_gemini(api_key, draft_prompt)
                         st.success(f"Draft Generated: {action_type}")
                         st.markdown(draft_text)
                     except Exception as e:
@@ -603,8 +602,8 @@ elif page == "🤖 Retention Copilot":
                 st.markdown(msg["content"])
 
         if prompt := st.chat_input("Ask about salary, workload..."):
-            if not api_key or gemini_client is None:
-                st.error("⚠️ Please enter a valid Gemini API Key in the sidebar.")
+            if not groq_ready:
+                st.error("⚠️ Please enter a valid Groq API Key in the sidebar.")
             else:
                 st.session_state.chat_history.append(
                     {"role": "user", "content": prompt})
@@ -619,7 +618,7 @@ elif page == "🤖 Retention Copilot":
                         Answer concisely.
                         """
                         try:
-                            chat_text = call_gemini(gemini_client, chat_prompt)
+                            chat_text = call_gemini(api_key, chat_prompt)
                             st.markdown(chat_text)
                             st.session_state.chat_history.append(
                                 {"role": "assistant", "content": chat_text})
