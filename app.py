@@ -99,6 +99,13 @@ st.markdown("""
         color: #000000 !important;
     }
 
+    /* Force ALL markdown-rendered content (bullet lists, bold, links, etc.)
+       to be visible. Without this, <li> text inherits a light/white color
+       from Streamlit's theme and disappears on the light background. */
+    [data-testid="stMarkdownContainer"] * {
+        color: #000000 !important;
+    }
+
     /* 3. SIDEBAR */
     [data-testid="stSidebar"] {
         background-color: #e3f2fd !important;
