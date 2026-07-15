@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import shap
-from google import genai
+from openai import OpenAI
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -263,22 +263,28 @@ if not default_key:
     except Exception:
         default_key = ""
 
-api_key = st.sidebar.text_input("Gemini API Key", type="password", value=default_key)
+api_key = st.sidebar.text_input("API Key", type="password", value=default_key)
 if default_key:
     st.sidebar.caption("✅ Using key from app secrets.")
 
-GEMINI_MODEL_PRIMARY = "gemini-2.5-flash"
-GEMINI_MODEL_FALLBACK = "gemini-2.0-flash"
+GROQ_MODEL_PRIMARY = "llama-3.3-70b-versatile"
+GROQ_MODEL_FALLBACK = "llama-3.1-8b-instant"
 
 
-def call_gemini(client, prompt):
-    """Generate content with the new google-genai Client, with a model fallback."""
+def call_gemini(api_key: str, prompt: str) -> str:
+    client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
     try:
-        resp = client.models.generate_content(model=GEMINI_MODEL_PRIMARY, contents=prompt)
-        return resp.text
+        resp = client.chat.completions.create(
+            model=GROQ_MODEL_PRIMARY,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
     except Exception:
-        resp = client.models.generate_content(model=GEMINI_MODEL_FALLBACK, contents=prompt)
-        return resp.text
+        resp = client.chat.completions.create(
+            model=GROQ_MODEL_FALLBACK,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content
 
 
 gemini_client = None
